@@ -8,6 +8,16 @@ It can be used by adding the following to your berks file
 cookbook 'poise-python', git: 'https://github.com/ITJamie/poise-python-patched.git'
 ```
 
+if you need the install function youll need to lock to pip 18 currently in your attributes or recipe
+attribute line
+```
+default['poise-python']['options']['pip_version'] = '18.0'
+```
+recipe file
+```
+node.default['poise-python']['options']['pip_version'] = '18.0'
+include_recipe 'poise-python'
+```
 # Poise-Python Cookbook
 A [Chef](https://www.chef.io/) cookbook to provide a unified interface for
 installing Python, managing Python packages, and creating virtualenvs.
