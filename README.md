@@ -4,7 +4,8 @@ I am not the origional authur of this cookbook.
 This is a patched fork for other users who still use it and need fixes
 
 It can be used by adding the following to your berks file
-```cookbook 'poise-python', git: 'https://github.com/ITJamie/poise-python-patched.git'
+```
+cookbook 'poise-python', git: 'https://github.com/ITJamie/poise-python-patched.git'
 ```
 
 # Poise-Python Cookbook
