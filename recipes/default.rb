@@ -14,6 +14,12 @@
 # limitations under the License.
 #
 
+if ENV['TEST_KITCHEN']
+  puts "TEST_OUTPUT:"
+  puts node['poise-python']
+end
+
+
 # Default runtimes, last one will be the default.
 python_runtime 'pypy' if node['poise-python']['install_pypy']
 python_runtime '3' if node['poise-python']['install_python3']

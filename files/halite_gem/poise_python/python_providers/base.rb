@@ -48,6 +48,7 @@ module PoisePython
         # Second inner converge for the support tools. This is needed because
         # we run a python command to check if venv is available.
         notifying_block do
+          install_distutils
           install_pip
           install_setuptools
           install_wheel
@@ -98,6 +99,27 @@ module PoisePython
         raise NotImplementedError
       end
 
+      # Setup distutils on ubuntu. this is a total PIA ubuntu!
+      # @return [void]
+      def install_distutils
+        # hack to workaround python not having distutils on ubuntu...
+        Chef::Log.info("[#{new_resource}] distutils installer - only valid on ubuntu for python 3")
+        # TODO: we should launch python and check if distutils can be imported. if not do the package install below \
+        # the logic below is not good
+        if options[:version].to_s == '3' && node[:platform] == "ubuntu" && node[:platform_version].split('.')[0].to_i >= 18
+          Chef::Log.info("[#{new_resource}] Installing distutils as this is ubuntu and its messed up")
+          poise_languages_system 'python3-distutils' do
+            parent new_resource
+            dev_package false
+            action :install
+          end
+          # this worked but we dont want to be doing apt commands raw...
+          #cmd = poise_shell_out('apt-get install -y python3-distutils', environment: python_environment)
+          #puts cmd if cmd.error?
+          #return unless cmd.error?
+          #Chef::Log.info("[#{new_resource}] Installed distutils")
+        end
+      end
       # Install pip in to the Python runtime.
       #
       # @return [void]

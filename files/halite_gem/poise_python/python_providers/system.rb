@@ -74,7 +74,7 @@ module PoisePython
           end
           # Aliases for 2 and 3.
           if version == '3' || version == ''
-            names.concat(%w{python3.5 python35 python3.4 python34 python3.3 python33 python3.2 python32 python3.1 python31 python3.0 python30 python3})
+            names.concat(%w{python3.6 python3.5 python35 python3.4 python34 python3.3 python33 python3.2 python32 python3.1 python31 python3.0 python30 python3})
           end
           if version == '2' || version == ''
             names.concat(%w{python2.7 python27 python2.6 python26 python2.5 python25})
