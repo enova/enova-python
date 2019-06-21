@@ -1,0 +1,65 @@
+---
+driver:
+  name: vagrant
+ 
+provisioner:
+  name: chef_zero
+  product_name: chef
+  product_version: "14"
+  require_chef_omnibus: "14"
+  data_bags_path: "test/data_bags"
+  log_level: info
+
+platforms:
+  - name: ubuntu-18.04
+    driver:
+      provision: true
+      vagrantfiles:
+        - vagrant.rb
+  - name: ubuntu-16.04
+    driver:
+      provision: true
+      vagrantfiles:
+          - vagrant.rb
+  - name: ubuntu-14.04
+    driver:
+      provision: true
+      vagrantfiles:
+        - vagrant.rb
+
+verifier:
+  name: inspec
+
+suites:
+  - name: Python3and2_pip19
+    driver_config:
+      vm_hostname: test-node1
+      customize:
+        memory: 512
+        cpus: 1
+    run_list:
+      - recipe[poise-python]
+    verifier:
+      inspec_tests:
+        - test/integration/base_python_tests
+    attributes:
+      poise-python:
+        install_python3: true
+        options:
+          pip_version: 19
+  - name: Python3and2_pip18
+    driver_config:
+      vm_hostname: test-node1
+      customize:
+         memory: 512
+         cpus: 1
+    run_list:
+      - recipe[poise-python]
+    verifier:
+      inspec_tests:
+        - test/integration/base_python_tests
+    attributes:
+      poise-python:
+        install_python3: true
+        options:
+          pip_version: 18
