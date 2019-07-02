@@ -1,0 +1,31 @@
+# Use Travis's cointainer based infrastructure
+sudo: false
+addons:
+  apt:
+    sources:
+      - chef-stable-precise
+    packages:
+      - chefdk
+
+env:
+  global:
+    - machine_user=travis
+    - machine_pass=travis
+    - machine_port=22
+    - KITCHEN_YAML=.kitchen.travis.yml
+
+# Don't `bundle install`
+install: echo "skip bundle install"
+
+branches:
+  only:
+    - master
+
+# Ensure we make ChefDK's Ruby the default
+before_script:
+  - eval "$(/opt/chefdk/bin/chef shell-init bash)"
+
+script:
+  - /opt/chefdk/embedded/bin/cookstyle .
+  - /opt/chefdk/embedded/bin/foodcritic .
+  - /opt/chefdk/bin/kitchen test
