@@ -1,18 +1,22 @@
-# Use Travis's cointainer based infrastructure
 sudo: false
+
 addons:
   apt:
     sources:
       - chef-stable-precise
     packages:
       - chefdk
+      - docker-ce
 
 env:
   global:
-    - machine_user=travis
-    - machine_pass=travis
-    - machine_port=22
     - KITCHEN_YAML=.kitchen.travis.yml
+  matrix:
+    - platform=ubuntu-14.04
+    - platform=ubuntu-16.04
+    - platform=ubuntu-18.04
+    - platform=debian-8
+    - platform=centos-7
 
 # Don't `bundle install`
 install: echo "skip bundle install"
@@ -24,8 +28,9 @@ branches:
 # Ensure we make ChefDK's Ruby the default
 before_script:
   - eval "$(/opt/chefdk/bin/chef shell-init bash)"
+  - /opt/chefdk/bin/chef gem install kitchen-docker
 
 script:
-  - /opt/chefdk/embedded/bin/cookstyle .
-  - /opt/chefdk/embedded/bin/foodcritic .
+  - /opt/chefdk/embedded/bin/cookstyle --version
+  - /opt/chefdk/embedded/bin/foodcritic --version
   - /opt/chefdk/bin/kitchen test

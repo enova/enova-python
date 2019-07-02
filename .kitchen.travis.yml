@@ -1,11 +1,9 @@
 ---
 driver:
-  name: proxy
-  host: localhost
+  name: docker
+  use_sudo: false
+  privileged: true
   reset_command: "exit 0"
-  port: <%= ENV["machine_port"] %>
-  username: <%= ENV["machine_user"] %>
-  password: <%= ENV["machine_pass"] %>
 
 provisioner:
   name: chef_zero
@@ -16,22 +14,13 @@ provisioner:
   log_level: info
 
 platforms:
-  - name: ubuntu-14.04
-  - name: ubuntu-18.04
-  - name: ubuntu-16.04
-  - name: centos-7
-  - name: debian-9
+  - name: <%= ENV["platform"] %>
 
 verifier:
   name: inspec
 
 suites:
   - name: Python3and2_pip19
-    driver_config:
-      vm_hostname: test-node1
-      customize:
-        memory: 512
-        cpus: 1
     run_list:
       - recipe[poise-python]
     verifier:
@@ -43,11 +32,6 @@ suites:
         options:
           pip_version: 19
   - name: Python3and2_pip18
-    driver_config:
-      vm_hostname: test-node1
-      customize:
-         memory: 512
-         cpus: 1
     run_list:
       - recipe[poise-python]
     verifier:
