@@ -1,6 +1,6 @@
 # Note!!!
 
-Enova is not the origional authur of this cookbook. The poise-python cookbook has been archived.
+Enova is not the origional author of this cookbook. The poise-python cookbook has been archived.
 As a result, Enova has forked and patched this cookbook for users that still require fixes.
 
 It can be used by adding the following to your berks file:
