@@ -103,7 +103,7 @@ module PoisePython
       # @return [void]
       def install_distutils
         # hack to workaround python not having distutils on ubuntu...
-        Chef::Log.info("[#{new_resource}] distutils installer - only valid on ubuntu for python 3")
+
         # TODO: we should launch python and check if distutils can be imported. if not do the package install below \
         # the logic below is not good
         if options[:version].to_s == '3' && node[:platform] == "ubuntu" && node[:platform_version].split('.')[0].to_i >= 18
