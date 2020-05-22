@@ -1,3 +1,4 @@
+# coding: utf-8
 #
 # Copyright 2015-2017, Noah Kantrowitz
 #
@@ -37,33 +38,49 @@ import re
 import sys
 
 import pip
-
 # Don't use pkg_resources because I don't want to require it before this anyway.
 if re.match(r'0\\.|1\\.|6\\.0', pip.__version__):
   sys.stderr.write('The python_package resource requires pip >= 6.1.0, currently '+pip.__version__+'\\n')
   sys.exit(1)
-tempstore =  pip.__version__.split('.')
-if len(tempstore) > 1:
-  current_version_pip_int = float(tempstore[0]+"."+tempstore[1])
-else:
-  current_version_pip_int = float(tempstore[0])
+
+cmd = None
+
 try:
   from pip.commands import InstallCommand
-  from pip.index import PackageFinder
-  from pip.req import InstallRequirement
-except ImportError:
+except Exception:
   # Pip 10 moved all internals to their own package.
-  from pip._internal.commands import InstallCommand
-  from pip._internal.index import PackageFinder
-  if current_version_pip_int <= 18.1:
+  try:
+    from pip._internal.commands import InstallCommand
+  except Exception:
+    from pip._internal.commands import create_command
+    cmd = create_command("install")
+
+try:
+  from pip.index import PackageFinder
+except Exception:
+  try:
+    from pip._internal.index import PackageFinder
+  except Exception:
+    from pip._internal.index.collector import LinkCollector
+    from pip._internal.index.package_finder import PackageFinder
+    from pip._internal.models.search_scope import SearchScope
+    from pip._internal.models.selection_prefs import SelectionPreferences
+
+try:
+  from pip.req import InstallRequirement
+  install_req_from_line = InstallRequirement.from_line
+except Exception:
+  try:
     from pip._internal.req import InstallRequirement
-  else:
-    from pip._internal.req.constructors import (
-      install_req_from_editable, install_req_from_line,
-    )
+    install_req_from_line = InstallRequirement.from_line
+  except Exception:
+    # Pip 18.1 moved from_line to the constructors
+    from pip._internal.req.constructors import install_req_from_line
 
 packages = {}
-cmd = InstallCommand()
+
+if cmd is None:
+  cmd = InstallCommand()
 options, args = cmd.parse_args(sys.argv[1:])
 with cmd._build_session(options) as session:
   if options.no_index:
@@ -71,7 +88,7 @@ with cmd._build_session(options) as session:
   else:
     index_urls = [options.index_url] + options.extra_index_urls
   finder_options = dict(
-    find_links=options.find_links,
+    find_links=options.find_links or [],
     index_urls=index_urls,
     allow_all_prereleases=options.pre,
     trusted_hosts=options.trusted_hosts,
@@ -81,18 +98,29 @@ with cmd._build_session(options) as session:
     finder_options['process_dependency_links'] = options.process_dependency_links
   if getattr(options, 'format_control', None):
     finder_options['format_control'] = options.format_control
-  finder = PackageFinder(**finder_options)
+  try:
+    finder = PackageFinder(**finder_options)
+  except TypeError:
+    finder = PackageFinder.create(
+      LinkCollector(session=session,
+                    search_scope=SearchScope.create(
+                      find_links=finder_options['find_links'],
+                      index_urls=finder_options['index_urls']
+                    )
+      ),
+      SelectionPreferences(allow_yanked=False,
+                           allow_all_prereleases=finder_options['allow_all_prereleases'],
+                           format_control=finder_options.get('format_control')
+      )
+    )
   find_all = getattr(finder, 'find_all_candidates', getattr(finder, '_find_all_versions', None))
   for arg in args:
-    if current_version_pip_int <= 18.1:
-      req = InstallRequirement.from_line(arg)
-    else:
-      req = install_req_from_line(arg)
+    req = install_req_from_line(arg)
     found = finder.find_requirement(req, True)
     all_candidates = find_all(req.name)
-    candidate = [c for c in all_candidates if c.location == found]
+    candidate = [c for c in all_candidates if getattr(c, 'location', getattr(c, 'link', None)) == found]
     if candidate:
-      packages[candidate[0].project.lower()] = str(candidate[0].version)
+      packages[getattr(candidate[0], 'project', getattr(candidate[0], 'name', None)).lower()] = str(candidate[0].version)
 json.dump(packages, sys.stdout)
 EOH
 
@@ -364,7 +392,6 @@ EOH
         # @param requirements [Array<String>] Pip-formatted package requirements.
         # @return [Mixlib::ShellOut]
         def pip_outdated(requirements)
-          puts "checking for #{requirements.to_s}"
           pip_command(nil, :list, requirements, input: PIP_HACK_SCRIPT, pip_runner: %w{-})
         end
 
